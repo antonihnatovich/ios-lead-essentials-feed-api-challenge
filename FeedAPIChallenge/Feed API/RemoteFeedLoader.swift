@@ -21,7 +21,11 @@ public final class RemoteFeedLoader: FeedLoader {
 	public typealias RemoteFeedImageResult = FeedLoader.Result
 
 	public func load(completion: @escaping (RemoteFeedImageResult) -> Void) {
-		client.get(from: url) { result in
+		client.get(from: url) { [weak self] result in
+			guard self != nil else {
+				return
+			}
+
 			switch result {
 			case .success(let data, let response):
 				completion(FeedImageResponseMapper.mapFeedImage(data: data, response: response))
