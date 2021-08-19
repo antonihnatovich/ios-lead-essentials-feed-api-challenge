@@ -38,10 +38,10 @@ final class FeedImageResponseMapper {
 			case url = "image_url"
 		}
 
-		public let id: UUID
-		public let description: String?
-		public let location: String?
-		public let url: URL
+		private let id: UUID
+		private let description: String?
+		private let location: String?
+		private let url: URL
 
 		var feedImage: FeedImage {
 			return FeedImage(id: id, description: description, location: location, url: url)
