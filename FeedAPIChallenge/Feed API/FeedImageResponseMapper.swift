@@ -23,7 +23,7 @@ final class FeedImageResponseMapper {
 
 	// MARK: - Helpers
 	private struct FeedImageResponse: Decodable {
-		let items: [ImageItem]
+		private let items: [ImageItem]
 
 		var feed: [FeedImage] {
 			return items.map { $0.feedImage }
