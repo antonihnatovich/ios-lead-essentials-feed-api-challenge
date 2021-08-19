@@ -18,17 +18,53 @@ public final class RemoteFeedLoader: FeedLoader {
 		self.client = client
 	}
 
-	public func load(completion: @escaping (FeedLoader.Result) -> Void) {
+	public typealias RemoteFeedImageResult = FeedLoader.Result
+
+	public func load(completion: @escaping (RemoteFeedImageResult) -> Void) {
 		client.get(from: url) { result in
 			switch result {
-			case .success(_, let response):
-				if response.statusCode == 200 {
-					completion(.success([]))
-				} else {
-					completion(.failure(Error.invalidData))
-				}
+			case .success(let data, let response):
+				completion(FeedImageResponseMapper.mapFeedImage(data: data, response: response))
 			case .failure:
 				completion(.failure(Error.connectivity))
+			}
+		}
+	}
+
+	// MARK: - Helpers
+	private class FeedImageResponseMapper {
+		static func mapFeedImage(data: Data, response: HTTPURLResponse) -> RemoteFeedImageResult {
+			guard response.statusCode == 200 else {
+				return .failure(Error.invalidData)
+			}
+			do {
+				let itemsContainer = try JSONDecoder().decode(FeedImageResponse.self, from: data)
+				return .success(itemsContainer.items.map { $0.feedImage })
+			} catch {
+				return .failure(Error.invalidData)
+			}
+		}
+
+		// MARK: - Helpers
+		private struct FeedImageResponse: Decodable {
+			let items: [ImageItem]
+		}
+
+		private struct ImageItem: Decodable {
+			private enum CodingKeys: String, CodingKey {
+				case id = "image_id"
+				case description = "image_desc"
+				case location = "image_loc"
+				case url = "image_url"
+			}
+
+			public let id: UUID
+			public let description: String?
+			public let location: String?
+			public let url: URL
+
+			var feedImage: FeedImage {
+				return FeedImage(id: id, description: description, location: location, url: url)
 			}
 		}
 	}
